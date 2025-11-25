@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Weather App</title>
+  <style>
+    body{font-family:Arial,Helvetica,sans-serif;background:linear-gradient(180deg,#f0f8ff,#eef2ff);display:flex;align-items:center;justify-content:center;height:100vh;margin:0}
+    .card{width:100%;max-width:420px;background:#fff;padding:18px;border-radius:12px;box-shadow:0 10px 30px rgba(2,6,23,.08)}
+    .search{display:flex;gap:8px;margin-bottom:14px}
+    input{flex:1;padding:8px;border:1px solid #e5e7eb;border-radius:8px}
+    button{padding:8px 10px;border-radius:8px;border:none;background:#2563eb;color:#fff}
+    .result{text-align:center}
+    .temp{font-size:36px;font-weight:700;margin:10px 0}
+    .muted{color:#6b7280}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>Weather Checker</h2>
+    <div class="search">
+      <input id="city" placeholder="Enter city (e.g. Hyderabad)" />
+      <button id="getBtn">Get</button>
+    </div>
+    <div id="result" class="result">
+      <p class="muted">Enter a city and press Get</p>
+    </div>
+  </div>
+
+  <script>
+    // --- IMPORTANT ---
+    // Replace 'YOUR_API_KEY_HERE' with your OpenWeatherMap API key:
+    // Get one free at https://openweathermap.org/api (Current Weather Data)
+    const API_KEY = 'YOUR_API_KEY_HERE';
+
+    const getBtn = document.getElementById('getBtn');
+    const cityInput = document.getElementById('city');
+    const result = document.getElementById('result');
+
+    function showLoading(){
+      result.innerHTML = '<p class="muted">Loading...</p>';
+    }
+    function showError(msg){
+      result.innerHTML = '<p class="muted">'+msg+'</p>';
+    }
+
+    async function fetchWeather(city){
+      if(!API_KEY || API_KEY === 'YOUR_API_KEY_HERE') {
+        showError('Please add your OpenWeatherMap API key in the code (see comments).');
+        return;
+      }
+      showLoading();
+      try {
+        const url = `https://api.openweathermap.org/data/2.5/weather?q=${encodeURIComponent(city)}&appid=${API_KEY}&units=metric`;
+        const res = await fetch(url);
+        if(!res.ok) {
+          showError('City not found or API error.');
+          return;
+        }
+        const data = await res.json();
+        renderWeather(data);
+      } catch (err) {
+        showError('Network error. Try again.');
+      }
+    }
+
+    function renderWeather(d){
+      const html = `
+        <h3>${d.name}, ${d.sys.country}</h3>
+        <div class="temp">${Math.round(d.main.temp)}°C</div>
+        <div class="muted">${d.weather[0].main} — ${d.weather[0].description}</div>
+        <p class="muted">Humidity: ${d.main.humidity}% • Wind: ${d.wind.speed} m/s</p>
+      `;
+      result.innerHTML = html;
+    }
+
+    getBtn.addEventListener('click', () => {
+      const city = cityInput.value.trim();
+      if(!city) return;
+      fetchWeather(city);
+    });
+
+    cityInput.addEventListener('keydown', (e) => {
+      if(e.key === 'Enter') getBtn.click();
+    });
+  </script>
+</body>
+</html>
